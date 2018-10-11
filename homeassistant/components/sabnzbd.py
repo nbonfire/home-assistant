@@ -34,6 +34,7 @@ CONFIG_FILE = 'sabnzbd.conf'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'SABnzbd'
 DEFAULT_PORT = 8080
+DEFAULT_WEB_ROOT = None
 DEFAULT_SPEED_LIMIT = '100'
 DEFAULT_SSL = False
 
@@ -69,6 +70,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_WEB_ROOT, default=DEFAULT_WEB_ROOT): cv.string,
         vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
@@ -95,6 +97,7 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
+    web_root = config[CONF_WEB_ROOT]
     uri_scheme = 'https' if use_ssl else 'http'
     base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
     if api_key is None:
@@ -102,7 +105,7 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
                                         hass.config.path(CONFIG_FILE))
         api_key = conf.get(base_url, {}).get(CONF_API_KEY, '')
 
-    sab_api = SabnzbdApi(base_url, api_key)
+    sab_api = SabnzbdApi(base_url, api_key, web_root)
     if await async_check_sabnzbd(sab_api):
         async_setup_sabnzbd(hass, sab_api, config, name)
     else:
